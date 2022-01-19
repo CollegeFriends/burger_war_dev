@@ -65,11 +65,7 @@ class JudgeListener():
             self.war_state_pub.publish(info)
             r.sleep()
 
-    def warStateCallback(self, msg):
-        print(msg)
-
 if __name__ == '__main__':
     rospy.init_node('judge_node')
     bot = JudgeListener(side=rosparam.get_param("cf_side"), judge_url=rosparam.get_param("judge_url"))
-    # bot.strategy()
 
