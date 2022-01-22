@@ -30,6 +30,7 @@ class CalcNearestTargetBot():
         self.war_state = None
         while not rospy.is_shutdown():
             if self.war_state is None:
+                self.rate.sleep()
                 continue
             
             try:
@@ -41,7 +42,7 @@ class CalcNearestTargetBot():
                 continue
             
             nearest_target = self.find_nearest_target(trans)
-            if self.nearest_target != nearest_target:
+            if self.nearest_target != nearest_target or True:
                 rospy.loginfo("nearest target : {}".format(nearest_target))
                 msg = String(data=nearest_target)
                 self.pub.publish(msg)

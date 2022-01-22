@@ -21,7 +21,7 @@ class NaviBot():
 
     def __init__(self):
         self.sub = rospy.Subscriber('nearest_target', String, self.nearestTargetCallback)
-        self.client = actionlib.SimpleActionClient('move_base',MoveBaseAction)
+        self.client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
         
     def setGoal(self,goal):
         self.client.wait_for_server()
@@ -41,7 +41,7 @@ class NaviBot():
         self.last_target_name = None
         while not rospy.is_shutdown():
             try:
-                if self.target_name != self.last_target_name:
+                if self.target_name != self.last_target_name :
                     goal = self.calcGoal(self.target_name)
                     rospy.loginfo("Set Goal to {} [{}]".format(self.target_name, goal.position))
                     ret = self.setGoal(goal)
