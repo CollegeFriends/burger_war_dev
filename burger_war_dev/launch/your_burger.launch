@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
   <arg name="side" default="r"/> <!-- "b" = blue side, "r" = red side  -->
-
+  <arg name="judge_url" default="http://localhost:5000/"/>
     <!-- You can change control program  -->
 
     <node pkg="burger_war_dev" type="judge_listener.py"       name="judge_node"           output="screen"/>
@@ -9,9 +9,11 @@
     <node pkg="burger_war_dev" type="calc_nearest_target.py"  name="calc_nearest_target"  output="screen"/>
     
     <!-- sample program node -->
-
-    <!-- <node pkg="burger_war_dev" type="randomRun.py" name="randomRun" output="screen"/> -->
-
+    <param name="judge_url" value="$(arg judge_url)"/>
+    <param name="cf_side" value="$(arg side)"/>
+    <node pkg="burger_war_dev" type="randomRun.py" name="randomRun" output="screen"/>
+    <node pkg="burger_war_dev" type="judge_listener.py" name="judge_node" output="screen"/>
+    
     <!-- END sample program node -->
 
     <!-- Navigation sample program  -->
