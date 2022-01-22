@@ -18,18 +18,21 @@ class NaviBot():
     DISTANCE = 0.25
 
     def __init__(self):
-        self.sub = rospy.Subscriber('nearest_target', String, self.nearestTargetCallback)
-        self.pub_goal = rospy.Publisher('move_base_simple/goal', PoseStamped, queue_size=5)
-        self.sub_status = rospy.Subscriber('move_base/status', GoalStatusArray, self.navStateCallback)    
+        self.sub_state = rospy.Subscriber('main_state', String, self.mainStateCallback)
+        self.sub_target = rospy.Subscriber('nearest_target', String, self.nearestTargetCallback)
+        self.main_state = "UNDEFINED"
 
+        self.pub_navi_goal = rospy.Publisher('move_base_simple/goal', PoseStamped, queue_size=5)
+        self.sub_navi_status = rospy.Subscriber('move_base/status', GoalStatusArray, self.navStateCallback)    
         self.navi_status = None
         self.target_name = None
         
     def setGoal(self,goal):
-        # self.client.wait_for_server()
-        # self.client.send_goal(goal)
         self.last_send_goal = goal
-        self.pub_goal.publish(goal)
+        self.pub_navi_goal.publish(goal)
+
+    def resendGoal(self):
+        self.pub_navi_goal.publish(self.last_send_goal)
 
     def cancelGoal(self):
         rospy.loginfo("Cancel all goals")
@@ -39,33 +42,6 @@ class NaviBot():
         self.target_name = msg.data
         rospy.loginfo("Nearest targe is {}".format(self.target_name))
         
-    def strategy(self):
-        self.rate = rospy.Rate(1)
-        self.last_target_name = None
-        self.last_send_goal = None
-
-        while not rospy.is_shutdown():
-            target = self.target_name 
-            try:
-                if target != self.last_target_name:
-                    
-                    goal = self.calcGoal(target)
-                    
-                    if goal is None:
-                        raise ValueError(target)
-                    self.cancelGoal()
-                    rospy.loginfo("Set Goal to {} [{}]".format(target, goal.pose.position))
-                    self.setGoal(goal)
-                    # rospy.loginfo("Result {}".format(ret))
-                    self.last_target_name = target
-                
-
-            except:
-                rospy.logerr("ERROR {}".format(target))
-                pass
-            finally:
-                self.rate.sleep()
-
     def calcGoal(self, targetName):
         goal = PoseStamped()
         goal.header.frame_id = "map"
@@ -123,6 +99,38 @@ class NaviBot():
 
             if status.status == 3:
                 rospy.logwarn("Reached but not take target == LOST!")
+
+    def mainStateCallback(self, data):
+        self.main_state = data.data
+
+    def strategy(self):
+        self.rate = rospy.Rate(1)
+        self.last_target_name = None
+        self.last_send_goal = None
+
+        while not rospy.is_shutdown():
+            target = self.target_name 
+            try:
+                if self.main_state == "GO":
+                    if target != self.last_target_name:
+                        
+                        goal = self.calcGoal(target)
+                        
+                        if goal is None:
+                            raise ValueError(target)
+                        self.cancelGoal()
+                        rospy.loginfo("Set Goal to {} [{}]".format(target, goal.pose.position))
+                        self.setGoal(goal)
+                        # rospy.loginfo("Result {}".format(ret))
+                        self.last_target_name = target
+                else:
+                    self.cancelGoal()    
+
+            except:
+                rospy.logerr("ERROR {}".format(target))
+                pass
+            finally:
+                self.rate.sleep()
 
 
 if __name__ == '__main__':
