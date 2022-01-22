@@ -36,7 +36,8 @@ class JudgeListener():
         resp_json = resp.json()        
 
         state = war_state()
-        state.time = resp_json['time']       
+        state.time = resp_json['time']    
+        state.state = resp_json['state']   
         state.my_side = self.side         
         state.my_point = resp_json['scores'][self.side]        
         state.target_names = []
