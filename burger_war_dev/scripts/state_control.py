@@ -24,8 +24,13 @@ class StateControlBot():
                     self.publish_state("GO")
             
             if self.war_state.state == "stop":
-                self.publish_state("STOP")
-                
+                if self.war_state.my_point < self.war_state.enemy_point:
+                    self.publish_state("LOSE")
+                elif self.war_state.my_point > self.war_state.enemy_point:
+                    self.publish_state("WIN")
+                else:
+                    self.publish_state("EVEN")
+            
             self.rate.sleep()
             
     def navStateCallback(self, data):

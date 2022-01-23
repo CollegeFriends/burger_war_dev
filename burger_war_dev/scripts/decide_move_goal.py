@@ -4,7 +4,7 @@ import rospy
 import math
 
 from std_msgs.msg import String
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, Twist
 
 import tf
 
@@ -24,6 +24,7 @@ class NaviBot():
 
         self.pub_navi_goal = rospy.Publisher('move_base_simple/goal', PoseStamped, queue_size=5)
         self.sub_navi_status = rospy.Subscriber('move_base/status', GoalStatusArray, self.navStateCallback)    
+        self.pub_cmd_vel = rospy.Publisher('cmd_vel', Twist, queue_size=5)
         self.navi_status = None
         self.target_name = None
         
@@ -123,6 +124,26 @@ class NaviBot():
                         self.setGoal(goal)
                         # rospy.loginfo("Result {}".format(ret))
                         self.last_target_name = target
+                elif self.main_state == "WIN":
+                    self.cancelGoal()    
+                    msg = Twist()
+                    msg.angular.z = 1
+                    self.pub_cmd_vel.publish(msg)
+
+                elif self.main_state == "LOSE":
+                    self.cancelGoal()    
+                    msg = Twist()
+                    msg.angular.z = -1
+                    self.pub_cmd_vel.publish(msg)
+
+                elif self.main_state == "EVEN":
+                    self.cancelGoal()    
+                elif self.main_state == "LOST":
+                    self.cancelGoal()
+
+                    msg = Twist()
+                    msg.angular.z = 1
+                    self.pub_cmd_vel.publish(msg)
                 else:
                     self.cancelGoal()    
 
