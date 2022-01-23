@@ -13,13 +13,14 @@ class StateControlBot():
 
         self.state = "UNDEFINED"
         self.navi_status = None
+        self.war_state = war_state()
 
     def strategy(self):
         self.publish_state("IDLING")
         self.rate = rospy.Rate(1)        
         while not rospy.is_shutdown():
             if self.state == "IDLING":
-                if self.wat_state.state == "running":
+                if self.war_state.state == "running":
                     self.publish_state("GO")
             
             if self.war_state.state == "stop":

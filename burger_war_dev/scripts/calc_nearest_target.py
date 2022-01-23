@@ -25,6 +25,7 @@ class CalcNearestTargetBot():
         self.pub = rospy.Publisher("nearest_target",String, queue_size=10)
 
     def strategy(self):
+        self.rate = rospy.Rate(1)
         base_time = rospy.Time.now()
         self.nearest_target = None
         self.war_state = None
