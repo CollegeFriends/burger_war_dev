@@ -27,6 +27,8 @@ class NaviBot():
         self.pub_cmd_vel = rospy.Publisher('cmd_vel', Twist, queue_size=5)
         self.navi_status = None
         self.target_name = None
+        self.lost_flg = False
+        self.last_send_goal = None   
         
     def setGoal(self,goal):
         self.last_send_goal = goal
@@ -36,12 +38,19 @@ class NaviBot():
         self.pub_navi_goal.publish(self.last_send_goal)
 
     def cancelGoal(self):
-        rospy.loginfo("Cancel all goals")
-        # self.client.cancel_goal()
+        try:
+            rospy.loginfo("Cancel all goals")
+            self.client.cancel_goal()
+        except:
+            pass
+    
+    def stop(self):
+        self.cancelGoal()
+        self.pub_cmd_vel.publish(Twist())
 
     def nearestTargetCallback(self, msg):
         self.target_name = msg.data
-        rospy.loginfo("Nearest targe is {}".format(self.target_name))
+        rospy.loginfo("Nearest target is {}".format(self.target_name))
         
     def calcGoal(self, targetName):
         goal = PoseStamped()
@@ -96,10 +105,11 @@ class NaviBot():
             if status == self.navi_status:
                 return
             self.navi_status = status
-            rospy.loginfo("Navi Status : {}".format(status))
+            # rospy.loginfo("Navi Status : {}".format(status))
 
             if status.status == 3:
                 rospy.logwarn("Reached but not take target == LOST!")
+                self.lost_flg = True
 
     def mainStateCallback(self, data):
         self.main_state = data.data
@@ -113,7 +123,16 @@ class NaviBot():
             target = self.target_name 
             try:
                 if self.main_state == "GO":
-                    if target != self.last_target_name:
+                    if self.lost_flg:
+                        self.cancelGoal()
+                        msg = Twist()
+                        msg.angular.z = 1
+                        self.pub_cmd_vel.publish(msg)
+                        rospy.sleep(rospy.Duration(1))
+                        self.stop()
+                        self.lost_flg = False
+                        self.resendGoal()
+                    elif target != self.last_target_name:
                         
                         goal = self.calcGoal(target)
                         
@@ -124,26 +143,20 @@ class NaviBot():
                         self.setGoal(goal)
                         # rospy.loginfo("Result {}".format(ret))
                         self.last_target_name = target
+
                 elif self.main_state == "WIN":
                     self.cancelGoal()    
                     msg = Twist()
                     msg.angular.z = 1
                     self.pub_cmd_vel.publish(msg)
-
                 elif self.main_state == "LOSE":
                     self.cancelGoal()    
                     msg = Twist()
                     msg.angular.z = -1
                     self.pub_cmd_vel.publish(msg)
-
                 elif self.main_state == "EVEN":
                     self.cancelGoal()    
-                elif self.main_state == "LOST":
-                    self.cancelGoal()
-
-                    msg = Twist()
-                    msg.angular.z = 1
-                    self.pub_cmd_vel.publish(msg)
+                
                 else:
                     self.cancelGoal()    
 

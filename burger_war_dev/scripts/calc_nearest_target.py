@@ -43,12 +43,17 @@ class CalcNearestTargetBot():
                 continue
             
             nearest_target = self.find_nearest_target(trans)
-            if self.nearest_target != nearest_target:
+            
+            if nearest_target is None:
+                rospy.loginfo("All target is owned by me!!!")
+                
+            elif self.nearest_target != nearest_target:
                 rospy.loginfo("nearest target : {}".format(nearest_target))
                 
-            msg = String(data=nearest_target)
-            self.pub.publish(msg)
-            self.nearest_target = nearest_target
+                msg = String(data=nearest_target)
+                self.pub.publish(msg)
+                self.nearest_target = nearest_target
+            
             self.rate.sleep()
 
     def find_nearest_target(self, cur_pos):
@@ -69,7 +74,7 @@ class CalcNearestTargetBot():
             if dist is None or dist_i < dist:
                 nearest_target_name = target_name
                 dist = dist_i
-            
+        
         return nearest_target_name
 
     def warStateCallback(self, msg):

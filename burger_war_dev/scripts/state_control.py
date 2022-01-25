@@ -22,8 +22,7 @@ class StateControlBot():
             if self.state == "IDLING":
                 if self.war_state.state == "running":
                     self.publish_state("GO")
-            
-            if self.war_state.state == "stop":
+            elif self.war_state.state == "stop":
                 if self.war_state.my_point < self.war_state.enemy_point:
                     self.publish_state("LOSE")
                 elif self.war_state.my_point > self.war_state.enemy_point:
@@ -39,10 +38,8 @@ class StateControlBot():
             if status == self.navi_status:
                 return
             self.navi_status = status
-            rospy.loginfo("Navi Status : {}".format(status))
+            rospy.logdebug("Navi Status : {}".format(status))
 
-            if status.status == 3:
-                self.publish_state("LOST")
 
     def publish_state(self, state):
         rospy.loginfo("STATE : {}".format(state))
@@ -52,7 +49,7 @@ class StateControlBot():
 
     def warStateCallback(self, msg):
         self.war_state = msg
-        rospy.logwarn("msg.state {}".format(msg.state))
+        rospy.logdebug("msg.state {}".format(msg.state))
 
 def main():
     rospy.init_node('state_control')
