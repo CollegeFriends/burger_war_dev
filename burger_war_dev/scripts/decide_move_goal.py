@@ -126,7 +126,7 @@ class NaviBot():
                     if self.lost_flg:
                         self.cancelGoal()
                         msg = Twist()
-                        msg.angular.z = 1
+                        msg.angular.z = 10
                         self.pub_cmd_vel.publish(msg)
                         rospy.sleep(rospy.Duration(1))
                         self.stop()
@@ -147,19 +147,25 @@ class NaviBot():
                 elif self.main_state == "WIN":
                     self.cancelGoal()    
                     msg = Twist()
-                    msg.angular.z = 1
+                    msg.angular.z = 10
                     self.pub_cmd_vel.publish(msg)
+                    break
                 elif self.main_state == "LOSE":
                     self.cancelGoal()    
                     msg = Twist()
-                    msg.angular.z = -1
+                    msg.angular.z = -10
                     self.pub_cmd_vel.publish(msg)
+                    break
                 elif self.main_state == "EVEN":
                     self.cancelGoal()    
-                
+                    break                
+                elif self.main_state in ["UNDEFINED"]:
+                    pass
                 else:
+                    rospy.logerr("Unexpected state : {}".format(self.main_state))
                     self.cancelGoal()    
-
+                    return
+                
             except:
                 rospy.logerr("ERROR {}".format(target))
                 pass
