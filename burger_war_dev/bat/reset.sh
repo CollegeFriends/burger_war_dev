@@ -1,4 +1,3 @@
- 
 #!/bin/bash
 cd ~/catkin_ws/src/burger_war_kit
 rosservice call /gazebo/reset_simulation "{}"
