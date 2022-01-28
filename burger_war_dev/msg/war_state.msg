@@ -1,4 +1,5 @@
 float64 time
+string state
 string my_side
 uint16 my_point
 uint16 enemy_point

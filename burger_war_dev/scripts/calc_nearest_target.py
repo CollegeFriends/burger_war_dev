@@ -19,12 +19,13 @@ from local_map import *
 
 class CalcNearestTargetBot():
     def __init__(self):
-        self.rate = rospy.Rate(10)
+        self.rate = rospy.Rate(1)
         self.tf_listener = tf.TransformListener()
         self.sub = rospy.Subscriber("war_state_info", war_state, self.warStateCallback)
         self.pub = rospy.Publisher("nearest_target",String, queue_size=10)
 
     def strategy(self):
+        self.rate = rospy.Rate(1)
         base_time = rospy.Time.now()
         self.nearest_target = None
         self.war_state = None
@@ -37,16 +38,22 @@ class CalcNearestTargetBot():
                 (trans, rot) = self.tf_listener.lookupTransform('map', 'base_footprint', rospy.Time(0))
                 rospy.logdebug("trans:{} rot:{}".format(trans,rot))
             except:
-                rospy.logerr("Wait for tf")
+                rospy.logwarn("Wait for tf")
                 self.rate.sleep()
                 continue
             
             nearest_target = self.find_nearest_target(trans)
-            if self.nearest_target != nearest_target or True:
+            
+            if nearest_target is None:
+                rospy.loginfo("All target is owned by me!!!")
+                
+            elif self.nearest_target != nearest_target:
                 rospy.loginfo("nearest target : {}".format(nearest_target))
+                
                 msg = String(data=nearest_target)
                 self.pub.publish(msg)
                 self.nearest_target = nearest_target
+            
             self.rate.sleep()
 
     def find_nearest_target(self, cur_pos):
@@ -67,7 +74,7 @@ class CalcNearestTargetBot():
             if dist is None or dist_i < dist:
                 nearest_target_name = target_name
                 dist = dist_i
-            
+        
         return nearest_target_name
 
     def warStateCallback(self, msg):
