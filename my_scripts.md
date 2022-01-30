@@ -31,16 +31,18 @@ apt install software-properties-common -y
 add-apt-repository ppa:deadsnakes/ppa -y
 apt install python3.8 -y
 
-apt install python3-pip -y
-pip3 install pipenv
-echo "export PIPENV_VENV_IN_PROJECT=true" >> ~/.bashrc
-echo "export PIPENV_VERBOSITY=-1" >> ~/.bashrc
-source ~/.bashrc
+python3.8 -m pip install opencv-python rospkg
+
+# apt install python3-pip -y
+# pip3 install pipenv
+# echo "export PIPENV_VENV_IN_PROJECT=true" >> ~/.bashrc
+# echo "export PIPENV_VERBOSITY=-1" >> ~/.bashrc
+# source ~/.bashrc
 # pipenv --python 3.8
 # pipenv install opencv-python
 # python3.8 -m pip install -U pip
 # python3.8 -m pip install rospkg opencv-python autopep8 pylint
-pipenv install -d
+# pipenv install -d
 ```
 
 ## python3でcv_bridgeを使えるようにする
@@ -63,7 +65,8 @@ catkin config \
 catkin config --install
 catkin build cv_bridge
 echo "source ~/catkin_cv_bridge/devel/setup.bash" >> ~/.bashrc
-echo "PYTHONPATH=/root/catkin_cv_bridge/devel/lib/python3.6/site-packages:$PYTHONPATH" >> ~/.bashrc
+echo "PYTHONPATH=~/catkin_cv_bridge/devel/lib/python3.6/site-packages:$PYTHONPATH" >> ~/.bashrc
+source ~/.bashrc
 ```
 
 <!-- # vscodeで勝手にpipenvの環境に入るのを無効化
