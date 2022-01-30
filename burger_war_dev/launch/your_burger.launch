@@ -12,6 +12,7 @@
     <node pkg="burger_war_dev" type="calc_nearest_target.py"  name="calc_nearest_target"/>
     <node pkg="burger_war_dev" type="state_control.py"  name="state_control"              output="screen"/>
     <node pkg="burger_war_dev" type="detect_object.py" name="cv_cam"/>
+    <node pkg="burger_war_dev" type="find_enemy.py" name="find_enemy"/>
     
     <!-- sample program node -->
     <!-- <node pkg="burger_war_dev" type="randomRun.py" name="randomRun" output="screen"/> -->

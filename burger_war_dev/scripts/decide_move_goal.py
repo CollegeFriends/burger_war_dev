@@ -3,7 +3,7 @@
 import rospy
 import math
 
-from std_msgs.msg import String
+from std_msgs.msg import String, Bool
 from geometry_msgs.msg import PoseStamped, Twist
 
 import tf
@@ -20,13 +20,16 @@ class NaviBot():
     def __init__(self):
         self.sub_state = rospy.Subscriber('main_state', String, self.mainStateCallback)
         self.sub_target = rospy.Subscriber('nearest_target', String, self.nearestTargetCallback)
+        self.sub_far_target = rospy.Subscriber('farest_target', String, self.farestTargetCallback)
+
         self.main_state = "UNDEFINED"
 
         self.pub_navi_goal = rospy.Publisher('move_base_simple/goal', PoseStamped, queue_size=5)
         self.sub_navi_status = rospy.Subscriber('move_base/status', GoalStatusArray, self.navStateCallback)    
         self.pub_cmd_vel = rospy.Publisher('cmd_vel', Twist, queue_size=5)
         self.navi_status = None
-        self.target_name = None
+        self.nearest_target_name = None
+        self.farest_target_name = None
         self.lost_flg = False
         self.last_send_goal = None   
         
@@ -49,9 +52,14 @@ class NaviBot():
         self.pub_cmd_vel.publish(Twist())
 
     def nearestTargetCallback(self, msg):
-        self.target_name = msg.data
-        rospy.loginfo("Nearest target is {}".format(self.target_name))
-        
+        self.nearest_target_name = msg.data
+        rospy.loginfo("Nearest target is {}".format(self.nearest_target_name))
+    
+    def farestTargetCallback(self, msg):
+        self.farest_target_name = msg.data
+        rospy.loginfo("Farest target is {}".format(self.farest_target_name))
+    
+
     def calcGoal(self, targetName):
         goal = PoseStamped()
         goal.header.frame_id = "map"
@@ -120,7 +128,7 @@ class NaviBot():
         self.last_send_goal = None
 
         while not rospy.is_shutdown():
-            target = self.target_name 
+            target = self.nearest_target_name 
             try:
                 if self.main_state == "GO":
                     if self.lost_flg:
@@ -143,6 +151,14 @@ class NaviBot():
                         self.setGoal(goal)
                         # rospy.loginfo("Result {}".format(ret))
                         self.last_target_name = target
+                elif self.main_state == "ESCAPE":
+                    if target != self.last_target_name:
+                        self.cancelGoal()
+                        target = self.farest_target_name
+                        goal = self.setGoal(target)
+                        self.setGoal(goal)
+                        self.last_target_name = target
+                        
 
                 elif self.main_state == "WIN":
                     self.cancelGoal()    

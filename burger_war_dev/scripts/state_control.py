@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import rospy
-from std_msgs.msg import String
+from std_msgs.msg import String, Bool
 from burger_war_dev.msg import war_state
 from actionlib_msgs.msg import GoalStatusArray
 
@@ -10,7 +10,9 @@ class StateControlBot():
         self.pub = rospy.Publisher("main_state",String, queue_size=10)
         self.sub = rospy.Subscriber("war_state_info", war_state, self.warStateCallback)
         self.sub_navi_status = rospy.Subscriber('move_base/status', GoalStatusArray, self.navStateCallback)    
-
+        self.sub_detectingEnemy = rospy.Subscriber('detect_enemy', Bool, self.detectEnemyCallback)
+        self.detecting_enemy = False
+        self.detected_time = None
         self.state = "UNDEFINED"
         self.navi_status = None
         self.war_state = war_state()
@@ -29,7 +31,11 @@ class StateControlBot():
                     self.publish_state("WIN")
                 else:
                     self.publish_state("EVEN")
-            
+            elif self.state == "GO" and self.detecting_enemy:
+                self.publish_state("ESCAPE")
+                rospy.sleep(rospy.Duration(10))
+                self.publish_state("GO")
+
             self.rate.sleep()
             
     def navStateCallback(self, data):
@@ -40,6 +46,8 @@ class StateControlBot():
             self.navi_status = status
             rospy.logdebug("Navi Status : {}".format(status))
 
+    def detectEnemyCallback(self,msg):
+        self.detecting_enemy = msg.data
 
     def publish_state(self, state):
         rospy.loginfo("STATE : {}".format(state))

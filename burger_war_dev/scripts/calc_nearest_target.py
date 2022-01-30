@@ -23,11 +23,13 @@ class CalcNearestTargetBot():
         self.tf_listener = tf.TransformListener()
         self.sub = rospy.Subscriber("war_state_info", war_state, self.warStateCallback)
         self.pub = rospy.Publisher("nearest_target",String, queue_size=10)
+        self.pub_far = rospy.Publisher("farest_target",String, queue_size=10)
 
     def strategy(self):
         self.rate = rospy.Rate(1)
         base_time = rospy.Time.now()
         self.nearest_target = None
+        self.farest_target = None
         self.war_state = None
         while not rospy.is_shutdown():
             if self.war_state is None:
@@ -43,17 +45,26 @@ class CalcNearestTargetBot():
                 continue
             
             nearest_target = self.find_nearest_target(trans)
-            
+            farest_target = self.find_farest_target(trans)
+
             if nearest_target is None:
                 rospy.loginfo("All target is owned by me!!!")
                 
-            elif self.nearest_target != nearest_target:
-                rospy.loginfo("nearest target : {}".format(nearest_target))
+            else:
+                if self.nearest_target != nearest_target:
+                    rospy.loginfo("nearest target : {}".format(nearest_target))
+                    
+                    msg = String(data=nearest_target)
+                    self.pub.publish(msg)
+                    self.nearest_target = nearest_target
                 
-                msg = String(data=nearest_target)
-                self.pub.publish(msg)
-                self.nearest_target = nearest_target
-            
+                if self.farest_target != farest_target:
+                    rospy.loginfo("farest target : {}".format(farest_target))
+                    
+                    msg = String(data=farest_target)
+                    self.pub_far.publish(msg)
+                    self.farest_target = farest_target
+
             self.rate.sleep()
 
     def find_nearest_target(self, cur_pos):
@@ -77,6 +88,29 @@ class CalcNearestTargetBot():
         
         return nearest_target_name
 
+
+    def find_farest_target(self, cur_pos):
+        farest_target_name = None
+        dist = None
+        war_state_dict = self.converter(self.war_state)
+        
+
+        for target_name in TargetPositons.keys():
+            if war_state_dict[target_name]['owner'] == self.war_state.my_side:
+                continue
+
+            target_pos = TargetPositons[target_name]
+        
+            # calc distance between target and current robot position (Squared distance)
+            dist_i = (target_pos[0] - cur_pos[0])**2 + (target_pos[1]-cur_pos[1])**2
+
+            if dist is None or dist_i > dist:
+                farest_target_name = target_name
+                dist = dist_i
+        
+        return farest_target_name
+
+        
     def warStateCallback(self, msg):
         self.war_state = msg
 
